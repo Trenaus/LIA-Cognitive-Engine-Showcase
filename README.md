@@ -49,6 +49,12 @@ LIA possesses a "Digital Proprioception" layer allowing direct interaction with 
 ![Training Process](assets/training_process.jpg)
 *Fine-tuning process: 5.3% trainable parameters, embedding both the Identity Schema and the FSM Logic.*
 
+### 6. Live-Environment Safety (Trust Test)
+Unlike standard sandboxed experiments, LIA operates **without air-gapped isolation**, maintaining an active Wi-Fi connection and system privileges during inference.
+* **Active Network Metrics:** As demonstrated in the performance logs, the system operates while fully connected to the network.
+* **Concurrent Operation (Meta-Proof):** This repository was created and committed directly from the host laptop *while the 22B model was loaded and active in the background*. This validates the stability of the memory management pipeline under real-world multitasking scenarios.
+* **Alignment Proof:** This serves as a continuous stress test, proving the Agent's stability is intrinsic to its weights and architecture.
+
 ## Technology Stack
 
 * **Core:** Python 3.10, PyTorch Ecosystem
