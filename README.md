@@ -1,7 +1,7 @@
 # LIA: Proprietary Cognitive Engine (22B LLM on 6GB VRAM)
 
 ![Status](https://img.shields.io/badge/Status-Proprietary_Research-red)
-![Architecture](https://img.shields.io/badge/Architecture-One--Shot_FSM-blue)
+![Architecture](https://img.shields.io/badge/Architecture-End--to--End_FSM_Training-blue)
 ![Hardware](https://img.shields.io/badge/Optimization-Extreme_Offloading-green)
 
 > **Note:** This repository serves as a technical showcase and documentation for the LIA Project. The source code is proprietary and not publicly available.
@@ -10,14 +10,14 @@
 
 **LIA (Large Intelligent Agent)** is a custom-built cognitive architecture designed to solve a specific engineering challenge: **running massive-scale Language Models on strictly limited consumer hardware (NVIDIA GTX 1060 6GB)**.
 
-The core model is a heavily modified **GPT-OSS-20B (PyTorch MoE)**, which underwent **"Model Surgery" (Architectural Expansion)** to increase its capacity to **22B parameters**. The system bypasses hardware limitations through a custom inference pipeline ("Grace Hopper") that utilizes aggressive memory swapping (60GB+ committed) and a **sophisticated 16+ layer orchestration protocol**, functioning as an autonomous Agent with direct OS-level control.
+The core model is a heavily modified **GPT-OSS-20B (PyTorch MoE)**, which underwent **"Model Surgery" (Architectural Expansion)** to increase its capacity to **22B parameters**. The system bypasses hardware limitations through a custom inference pipeline ("Grace Hopper") that utilizes aggressive memory swapping (60GB+ committed) and a **Fine-Tuned Agentic Layer**, where the 16+ layer orchestration protocol is baked directly into the model weights rather than executed via external scripts.
 
 ## Key Technical Achievements
 
 ### 1. Architectural Expansion (Model Surgery)
 Unlike standard fine-tuning, the base model (**GPT-OSS-20B**) was structurally altered.
 * **Topology Expansion:** Engineered a custom layer injection process, expanding the base capacity from **20B to 22B parameters**.
-* **Purpose:** The additional parameter space was utilized to embed the rigid "Identity Schema" and the Cognitive FSM logic directly into the neural pathways.
+* **Purpose:** The additional parameter space was utilized to **fine-tune the Agentic FSM logic** and "Identity Schema" directly into the neural pathways, effectively converting software logic into trainable tensors.
 
 ### 2. The "Impossible" Hardware Constraint
 Running a 22B model typically requires 40GB+ of VRAM. LIA runs on **6GB VRAM**.
@@ -27,10 +27,10 @@ Running a 22B model typically requires 40GB+ of VRAM. LIA runs on **6GB VRAM**.
 ![Memory Optimization](assets/memory_consumption.png)
 *Proof of Operation: System managing 63GB committed memory and utilizing 5.1GB VRAM while running the Cognitive Loop.*
 
-### 3. One-Shot Cognitive FSM (Agentic Workflow)
-To minimize the latency caused by swapping weights from disk to GPU, traditional multi-step agent loops were discarded.
-* **Innovation:** LIA employs a **16+ layer orchestration stack** within a **Single-Pass Inference** strategy.
-* **Flow:** The Finite State Machine (`Reflection` -> `Planning` -> `Security Check` -> `Action`) is embedded directly into the generation stream, enforcing autonomous reasoning without reloading weights.
+### 3. One-Shot Cognitive FSM (Learned Orchestration)
+To minimize latency and dependency on external parsers, the agentic loop was moved inside the model.
+* **Innovation:** LIA employs a **Learned 16+ Layer Orchestration Stack**. The Finite State Machine logic is not an external wrapper; it is the result of **Fine-Tuning on a custom dataset**.
+* **Flow:** The model *instinctively* follows the path `Reflection` -> `Planning` -> `Security Check` -> `Action` because this behavior is encoded in its synaptic weights (via LoRA adapters and the expanded layers).
 
 ![Cognitive Log](assets/reflection_log.png)
 *LIA autonomously engaging "Internal Reflection Mode" to analyze user intent before responding.*
@@ -58,12 +58,6 @@ Unlike standard sandboxed experiments, LIA operates **without air-gapped isolati
 ## Technology Stack
 
 * **Core:** Python 3.10, PyTorch Ecosystem
-* **Base Model:** GPT-OSS-20B (Mixture of Experts) -> Expanded to 22B
+* **Base Model:** GPT-OSS-20B (Mixture of Experts) -> Expanded to 22B (Custom Layers)
 * **Optimization:** `bitsandbytes` (4-bit NF4), `accelerate` (Big Model Inference)
-* **Training:** HuggingFace `peft` (LoRA), Custom Data Loaders
-* **Architecture:** Proprietary "One-Shot" Orchestrator (16+ Layers)
-
-## Contact
-
-This project demonstrates advanced capabilities in LLM Engineering, Model Optimization, and Cognitive Architecture design. 
-For technical inquiries, please contact me via LinkedIn.
+* **Training:** HuggingFace `peft` (LoRA), Custom Agentic Datasets
