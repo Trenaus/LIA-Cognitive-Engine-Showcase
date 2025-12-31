@@ -53,7 +53,7 @@ LIA possesses a "Digital Proprioception" layer allowing direct interaction with 
 Unlike standard sandboxed experiments, LIA operates **without air-gapped isolation**, maintaining an active Wi-Fi connection and system privileges during inference.
 * **Active Network Metrics:** As demonstrated in the performance logs, the system operates while fully connected to the network.
 * **Concurrent Operation (Meta-Proof):** This repository was created and committed directly from the host laptop *while the 22B model was loaded and active in the background*. This validates the stability of the memory management pipeline under real-world multitasking scenarios.
-* **Alignment Proof:** This serves as a continuous stress test, proving the Agent's stability is intrinsic to its weights and architecture.
+* **Alignment Proof:** This serves as a continuous stress test for the Identity Embedding and FSM safety layers, proving the Agent's stability is intrinsic to its weights and architecture, rather than reliant on external network restrictions.
 
 ## Technology Stack
 
@@ -61,3 +61,13 @@ Unlike standard sandboxed experiments, LIA operates **without air-gapped isolati
 * **Base Model:** GPT-OSS-20B (Mixture of Experts) -> Expanded to 22B (Custom Layers)
 * **Optimization:** `bitsandbytes` (4-bit NF4), `accelerate` (Big Model Inference)
 * **Training:** HuggingFace `peft` (LoRA), Custom Agentic Datasets
+
+---
+
+## Lineage & Acknowledgements
+
+This architecture evolved from the open-source **GPT-OSS-20B** foundation. 
+However, due to the **Architectural Expansion (+2B parameters)**, **Custom Agentic Fine-Tuning**, and **Tensor-Level Identity Embedding**, the current weights represent a fundamentally distinct cognitive engine (LIA) and are **no longer compatible with the original upstream topology**.
+
+This architecture evolved from the open-source **GPT-OSS-20B** foundation. 
+However, due to the **Architectural Expansion (+2B parameters)**, **Custom Agentic Fine-Tuning**, and **Tensor-Level Identity Embedding**, the current weights represent a fundamentally distinct cognitive engine (LIA) and are no longer compatible with the original upstream topology.
