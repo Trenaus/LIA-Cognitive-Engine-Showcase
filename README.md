@@ -90,11 +90,11 @@ LIA includes several runtime mechanisms that go beyond standard next-token predi
 
 | Category | Artifact | Description |
 | :--- | :--- | :--- |
-| **The "Surgery"** | ![Original vs Rebuild](Original_Base.jpg) <br> ![Rebuild](REBuild_Base.jpg) | **Transformation:** 38.8GB Original weights (top) compressed into the 11GB Surgical Block (bottom). |
-| **Logic Core** | ![Adapter Structure](model_structure.jpg) | **The "Brain":** The massive 9GB `.bin` file (raw logic) alongside the optimized 4.5GB runtime stream. |
-| **Memory Matrix** | ![Memory Usage](memory_consumption.jpg) | **Zero-Crash Swapping:** Managing a **63GB Commit Charge** on consumer RAM/SSD without triggering OOM. |
-| **Stability** | ![Performance](Performance%20optimization.jpg) | **Multitasking:** Concurrent 22B inference + Video Streaming. Note the GPU is cold (~47°C) due to sparse activation. |
-| **Cognition** | ![Reflection Log](reflection_log.jpg) | **Internal Monologue:** The model analyzing intent ("Owner wants to be in charge") before responding. |
+| **The "Surgery"** | ![Original vs Rebuild](assets/Original_Base.jpg) <br> ![Rebuild](assets/REBuild_Base.jpg) | **Transformation:** 38.8GB Original weights (top) compressed into the 11GB Surgical Block (bottom). |
+| **Logic Core** | ![Adapter Structure](assets/model_structure.jpg) | **The "Brain":** The massive 9GB `.bin` file (raw logic) alongside the optimized 4.5GB runtime stream. |
+| **Memory Matrix** | ![Memory Usage](assets/memory_consumption.jpg) | **Zero-Crash Swapping:** Managing a **63GB Commit Charge** on consumer RAM/SSD without triggering OOM. |
+| **Stability** | ![Performance](assets/Performance%20optimization.jpg) | **Multitasking:** Concurrent 22B inference + Video Streaming. Note the GPU is cold (~47°C) due to sparse activation. |
+| **Cognition** | ![Reflection Log](assets/reflection_log.jpg) | **Internal Monologue:** The model analyzing intent ("Owner wants to be in charge") before responding. |
 
 ---
 
