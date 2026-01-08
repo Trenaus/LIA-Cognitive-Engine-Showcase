@@ -1,59 +1,88 @@
-# LIA: Proprietary Cognitive Engine (22B LLM on 6GB VRAM)
+---
+language:
+- en
+license: proprietary
+tags:
+- technical-showcase
+- true-moe
+- sparse-activation
+- 4-bit-nf4
+- nvidia-gtx-1060
+- custom-kernel
+pipeline_tag: text-generation
+inference: false
+---
 
-> **Note:** This repository serves as a technical showcase and documentation for the **LIA Project**. The source code is proprietary and not publicly available.
+# PROJECT LIA: 22B Effective Parameter True-MoE Engine on 6GB VRAM
+> **LIA — Large Intelligent Agent**  
+> **TECHNICAL SHOWCASE / PROPRIETARY RESEARCH**
+>
+> *This repository is a read-only artifact gallery demonstrating the feasibility of running datacenter-class Mixture-of-Experts (MoE) models on legacy consumer hardware. Source code is closed-source.*
 
-## Executive Summary
+## The Engineering Challenge
 
-**LIA (Large Intelligent Agent)** is a custom-built cognitive architecture designed to solve a specific engineering challenge: **running massive-scale Language Models on strictly limited consumer hardware (NVIDIA GTX 1060 6GB).**
+### 1. The Physics Barrier (Hardware)
+Standard industry logic dictates that running a **22-Billion Parameter MoE Model** requires VRAM capable of holding all experts simultaneously (40GB+) to prevent latency bottlenecks. The base weights alone typically exceed **38 GB**.
 
-The core model is a heavily modified **GPT-OSS-20B (PyTorch MoE)**, which underwent **"Model Surgery" (Architectural Expansion)** to increase its capacity to **22B parameters**. The system bypasses hardware limitations through a custom inference pipeline ("Grace Hopper") utilizing aggressive memory swapping (60GB+ committed) and a deeply integrated agentic layer.
+**PROJECT LIA challenges this assumption by demonstrating that full MoE inference does not require resident VRAM storage of all experts simultaneously.** It runs mixed-precision BF16/NF4 inference on a single **NVIDIA GTX 1060 (6GB)**.
+
+### 2. The Tooling Gap (Software)
+At the time of development, no existing Hugging Face or BitsAndBytes tooling supported this specific GPT-based MoE configuration. Standard loaders and execution paths consistently failed at initialization.
+
+As a result, model loading, adapter binding, tokenization, routing, and orchestration were implemented manually, forming a fully custom runtime layer. **This effectively shifted the project from model fine-tuning to runtime systems engineering.**
+
+> *Note: The term "kernel" in this documentation refers to a specialized userland execution and orchestration layer, not a replacement for the Windows NT kernel itself.*
+
+## The "Impossible" Architecture
+
+LIA is a result of a specific **evolutionary process**. We did not simply quantize a standard model. We grew a new neural structure (Logic Turbine) on top of a 20B base, and then surgically compressed the body to fit the chassis.
+
+### 1. Architectural Expansion (20B → 22B)
+The project started with a standard **20B MoE Base**. During the high-precision training phase, we cultivated a massive **Adapter Layer (+2B Parameters)**.
+* **The Artifact:** This resulted in a **9.08 GB** binary file (`adapter_model.bin`) containing the pure FSM logic, Identity, and Protocol definitions formed *before* any compression took place.
+* **Purpose:** Unlike "Knowledge" (stored in the base), this layer handles "Reasoning" and "Control".
+
+### 2. Surgical Compression (The "Fit" Phase)
+To run this 22B monster on a **GTX 1060 (6GB)**, we performed a split optimization:
+* **Base Model (Knowledge):** The 38.8 GB base weights were aggressively compressed into an **11 GB Surgical Block** (NF4) to reside in system RAM.
+* **Logic Stream (Intelligence):** The 9GB Adapter was optimized into a **4.58 GB Runtime Stream**.
+
+### 3. The "Grace Hopper" Pipeline
+The system bypasses the VRAM limit by treating the GPU as a "Compute Core" rather than a "Storage Unit".
+* **Orchestration:** The Grace Hopper pipeline operates inside a custom Windows execution environment with a bespoke runtime kernel responsible for expert orchestration.
+* **Routing Logic:** Expert selection and prefetching are driven by routing signals, tokenizer state, and manually wired execution paths.
+* **Host Dependency:** This environment bypasses standard ML framework loaders and relies on a custom library stack and execution order, making the runtime non-reproducible outside its native system configuration.
 
 ---
 
-## Architectural Expansion: The "Turbine" Upgrade
+## 📊 Performance Matrix: The Transformation
 
-*Why expand a 20B model to 22B?*
+This table demonstrates the "Surgical" process: converting a massive unrunnable training checkpoint into a functioning runtime engine on consumer hardware.
 
-Usually, increasing a model's size implies adding more *data* (books to the library). This project takes a radically different approach. It’s not just about adding knowledge; **it’s about installing a new engine.**
-
-* **Base Model (20B):** The knowledge base. It knows "what" things are.
-* **The Expansion (+2B via Adapters):** Pure **Functional Logic**.
-
-Think of the base model as a naturally aspirated engine. It has power but lacks granular control. The additional **2B parameters** (visible in the codebase as a massive **9 GB** binary block) act as a **high-pressure turbine**, consisting of:
-1.  **Orchestration Nodes:** Hard-coded neural pathways for the 22-step FSM logic.
-2.  **State Management:** Weights dedicated to maintaining the "Cognitive Bucket" (Reflection/Intent/Vector) across inference steps.
-3.  **Control Interfaces:** Tensors trained specifically to enforce the `[[CMD:...]]` protocol and JSON schemas.
-
-**Result:** This transformation converts a passive text generator into an active **Cognitive Engine** without retraining the massive base from scratch.
+| Metric | Original Training State (Source) | LIA Runtime Engine (Result) |
+| :--- | :--- | :--- |
+| **Base Architecture** | **GPT-OSS 20B (MoE)** | **Surgical MoE (Preserved)** |
+| **Expansion Logic** | +2B Parameters (Training Phase) | Integrated Logic Stream |
+| **Total Parameters** | **~22 Billion** (MoE) | **~22 Billion** (MoE) |
+| **Base Weights (Knowledge)**| 38.8 GB (FP16 .bin) | **11.0 GB** (Surgical NF4) |
+| **Logic Adapter (FSM)** | **9.08 GB** (Raw Training Artifact) | **4.58 GB** (Optimized Stream) |
+| **VRAM Required** | 45GB+ (Full Load) | **4.6 GB** (Dynamic Swapping) |
+| **State** | Uncompressed / Static | **Compressed / Fluid** |
 
 ---
 
-## Key Technical Achievements
+## Runtime Capabilities
 
-### 1. The "Notepad" Engineering Paradigm (Zero-Tooling)
-* The entire project was architected and coded using **Windows Notepad**, without the use of heavy IDEs or automated development tools.
-* **Pure Logic:** Every tensor path and layer of the 22+ level FSM was built manually based on a deep understanding of process physics.
-* **Hacker-Style Resilience:** The system deliberately ignores standard library "panic" warnings regarding memory limits, maintaining stable inference where standard software stacks would trigger an OOM (Out of Memory) error.
+LIA includes several runtime mechanisms that go beyond standard next-token prediction:
 
-### 2. The "Impossible" Hardware Constraint (SATA SSD Optimized)
-* **Challenge:** Running a 22B model typically requires 40GB+ of VRAM. LIA runs on **6GB VRAM**.
-* **Solution:** A custom memory allocation strategy was developed using **bitsandbytes NF4 quantization** and tiered offloading (GPU -> RAM -> SATA SSD).
-* **Resource Arbitration:** The system manages a **63.1 GB memory commit charge** while maintaining responsiveness on standard SATA interfaces.
+1. **Tensor Integrity Checks**
+   Detects and mitigates inactive or malformed expert tensors during dynamic swapping.
 
-### 3. One-Shot Cognitive FSM (Stateful Orchestration)
-* To minimize latency, the agentic loop was moved *inside* the model weights.
-* **Innovation:** LIA employs a **Learned Orchestration Stack**. The logic is not an external script but a result of Fine-Tuning on a custom dataset.
-* **Flow:** The model instinctively follows the path `Reflection` -> `Intent Analysis` -> `Security Check` -> `Action`.
+2. **Hardware-Aware Control Layer**
+   Interfaces with host hardware through a restricted local control protocol.
 
-### 4. Deep Identity Embedding (Security Layer)
-* Identity is cryptographically burned into the model's weights.
-* **Hard-coded JSON Schema:** The model contains a frozen internal state defining the `owner_id`, cryptographic `trigger_key`, and system `home_path`.
-* **Cognitive Awareness:** LIA demonstrates immediate intent analysis ("Owner wants to be in charge") and "Cold Start" situational awareness from the very first token.
-
-### 5. Live-Environment Stability & Thermal Reliability
-* LIA operates smoothly in everyday multitasking environments without air-gapped isolation.
-* **The Multimedia Benchmark:** The system maintains full inference capabilities while simultaneously streaming **720p HD video** with zero UI lag.
-* **Thermal Signature:** Under peak 22B load, the GPU (GTX 1060) maintains a stable **46°C - 47°C**.
+3. **Fully Offline Operation**
+   No external dependencies or network access. All model state and orchestration reside on local storage and memory.
 
 ---
 
@@ -61,20 +90,28 @@ Think of the base model as a naturally aspirated engine. It has power but lacks 
 
 | Category | Artifact | Description |
 | :--- | :--- | :--- |
-| **Cognitive Core** | ![Reflection Log](reflection_log.jpg) | Internal reflection logs showing Chain of Thought (CoT) and intent decoding. Note the "Owner wants to be in charge" analysis. |
-| **Memory Mgmt** | ![Memory Consumption](memory_consumption.jpg) | **63GB total memory commit charge** running on consumer SATA storage without crashing OS. |
-| **Stability** | ![Performance](Performance%20optimization.jpg) | Concurrent 22B inference + 720p video streaming. GPU remains cold at **47°C**. |
-| **Expansion** | ![Model Structure](model_structure.jpg) | **Adapter Weights: ~9 GB (Binary)**. The raw `.bin` file containing the logic injection layer. |
-| **Training** | ![Training Process](training_process.jpg) | **1.17B parameter training loop** executing on a consumer GPU via "Grace Hopper" pipeline. |
+| **The "Surgery"** | ![Original vs Rebuild](Original_Base.jpg) <br> ![Rebuild](REBuild_Base.jpg) | **Transformation:** 38.8GB Original weights (top) compressed into the 11GB Surgical Block (bottom). |
+| **Logic Core** | ![Adapter Structure](model_structure.jpg) | **The "Brain":** The massive 9GB `.bin` file (raw logic) alongside the optimized 4.5GB runtime stream. |
+| **Memory Matrix** | ![Memory Usage](memory_consumption.jpg) | **Zero-Crash Swapping:** Managing a **63GB Commit Charge** on consumer RAM/SSD without triggering OOM. |
+| **Stability** | ![Performance](Performance%20optimization.jpg) | **Multitasking:** Concurrent 22B inference + Video Streaming. Note the GPU is cold (~47°C) due to sparse activation. |
+| **Cognition** | ![Reflection Log](reflection_log.jpg) | **Internal Monologue:** The model analyzing intent ("Owner wants to be in charge") before responding. |
 
 ---
 
-## Technology Stack
+> **Status:** `OPERATIONAL / STABLE`
+> **Developer:** Denys
+> **Environment:** Localhost / Custom Windows Kernel
 
-* **Core:** Python 3.10, PyTorch, Transformers, PEFT/LoRA.
-* **Optimization:** BitsAndBytes (4-bit NF4), Accelerate, Custom Memory Allocators.
-* **Hardware Target:** NVIDIA GTX 1060 6GB + 24GB RAM + SATA Swap.
+---
+
 
 ## Lineage & Acknowledgements
 
-This architecture evolved from the **GPT-OSS-20B** foundation. Due to the **architectural expansion (+2B parameters)** and custom "Notepad-based" fine-tuning, the weights represent a fundamentally distinct cognitive engine (**LIA**).
+This architecture traces its genetic lineage to the **GPT-OSS-20B** foundation.
+However, due to the surgical 20B→22B expansion, a custom NF4 quantization map,
+and a fundamental shift from conventional fine-tuning to runtime systems engineering,
+the resulting artifacts constitute a distinct evolutionary branch.
+
+**LIA** is binary-incompatible with its ancestor and exists as a standalone
+Cognitive Engine. Its operation depends on a specific "Host-as-Code" execution
+environment, without which the model artifacts are non-functional.
