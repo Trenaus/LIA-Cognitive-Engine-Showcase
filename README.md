@@ -47,7 +47,7 @@ To run this 22B monster on a **GTX 1060 (6GB)**, we performed a split optimizati
 * **Base Model (Knowledge):** The 38.8 GB base weights were aggressively compressed into an **11 GB Surgical Block** (NF4) to reside in system RAM.
 * **Logic Stream (Intelligence):** The 9GB Adapter was optimized into a **4.58 GB Runtime Stream**.
 
-### 3. The "Grace Hopper" Pipeline
+### 3. The "Adaptive MoE Offload" Pipeline
 The system bypasses the VRAM limit by treating the GPU as a "Compute Core" rather than a "Storage Unit".
 * **Orchestration:** The Grace Hopper pipeline operates inside a custom Windows execution environment with a bespoke runtime kernel responsible for expert orchestration.
 * **Routing Logic:** Expert selection and prefetching are driven by routing signals, tokenizer state, and manually wired execution paths.
