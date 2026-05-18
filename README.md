@@ -62,26 +62,51 @@ The standard libraries provide the foundational building blocks, but for this co
 
 The resulting runtime is tightly coupled to this specific hardware/model combination — the parameter values, loading sequence, and placement strategy are not portable through standard tooling. This represents engineering work in the gap between "the library supports this in theory" and "this actually runs stably on consumer hardware below official minimum requirements."
 
-## The "Impossible" Architecture
+## The Architecture
 
-LIA is a result of a specific **evolutionary process**. We did not simply quantize a standard model. We grew a new neural structure (Logic Turbine) on top of a 20B base, and then surgically compressed the body to fit the chassis.
+LIA combines a fine-tuned base model with a custom inference runtime. The system was built in two phases: training an extensive PEFT adapter on the base model to shape behavior and response patterns, then compressing all components to fit constrained hardware through a custom orchestration pipeline.
 
-### 1. Architectural Expansion (20B → 22B)
-The project started with a standard **20B MoE Base**. During the high-precision training phase, we cultivated a massive **Adapter Layer (+2B Parameters)**.
-* **The Artifact:** This resulted in a **9.08 GB** binary file (`adapter_model.bin`) containing the pure FSM logic, Identity, and Protocol definitions formed *before* any compression took place.
-* **Purpose:** Unlike "Knowledge" (stored in the base), this layer handles "Reasoning" and "Control".
+### 1. Architectural Expansion (20B → 22B)1. Base Model and Adapter Training (Phase 1)
 
-### 2. Surgical Compression (The "Fit" Phase)
-To run this 22B monster on a **GTX 1060 (6GB)**, we performed a split optimization:
-* **Base Model (Knowledge):** The 38.8 GB base weights were aggressively compressed into an **11 GB Surgical Block** (NF4) to reside in system RAM.
-* **Logic Stream (Intelligence):** The 9GB Adapter was optimized into a **4.58 GB Runtime Stream**.
+The foundation is gpt-oss-20b — a 21B parameter MoE model with 3.6B active parameters per token, released by OpenAI under Apache 2.0 license.
 
-### 3. The "Adaptive MoE Offload" Pipeline
-The system bypasses the VRAM limit by treating the GPU as a "Compute Core" rather than a "Storage Unit".
-* **Orchestration:** The Grace Hopper pipeline operates inside a custom Windows execution environment with a bespoke runtime kernel responsible for expert orchestration.
-* **Routing Logic:** Expert selection and prefetching are driven by routing signals, tokenizer state, and manually wired execution paths.
-* **Host Dependency:** This environment bypasses standard ML framework loaders and relies on a custom library stack and execution order, making the runtime non-reproducible outside its native system configuration.
+An extensive PEFT adapter with 1,173,057,792 trainable parameters (5.3% of total parameter count) was trained using LoRA with bias="all" configuration. This setup trains not only the low-rank decomposition matrices but also all bias parameters throughout the model, producing a significantly larger and more impactful adapter than standard LoRA configurations.
 
+The parameter count growth comes from behavioral logic, not from added knowledge. The training dataset (556 examples) consisted of custom instructions and behavioral protocols rather than factual content. The 9.08 GB adapter size reflects what the model learned about how to behave, respond, and process instructions — not new things it learned to know. 
+
+This distinction matters: factual knowledge resides in the base model and remained unchanged; the adapter encodes the behavioral and procedural layer learned during training.
+
+The artifact: A 9.08 GB checkpoint (adapter_model.bin), notably larger than typical LoRA adapters (which are usually 100MB-1GB for models of this class) due to the bias="all" configuration combined with extensive behavioral training.
+
+Function: The base model retains its knowledge and reasoning capabilities; the adapter shapes how those capabilities are expressed through learned behavioral patterns and modified bias terms throughout the network.
+
+Implementation details: Specific training hyperparameters (LoRA rank, learning rate, training duration, dataset composition) are proprietary.
+
+### 2. Custom Compression (Phase 2)
+
+To run the combined system on a GTX 1060 with 6GB VRAM, both the base model and the adapter were compressed using a custom mixed-precision quantization profile:
+
+Base model: The 38.8 GB base weights were compressed to 11.0 GB using per-module mixed-precision quantization (BF16/NF4). The quantization format for each module was selected based on sensitivity analysis rather than applying uniform quantization across the entire model.
+
+Adapter: The 9.08 GB adapter checkpoint was optimized to a 4.58 GB runtime form compatible with the compressed base.
+
+Adapter rebinding: After non-standard quantization changes the internal layer structure, LoRA adapters cannot attach through standard PEFT target_modules logic. Manual reconstruction of attachment points was required to preserve adapter functionality on the modified base.
+
+Implementation details: Specific per-module quantization mapping and adapter rebinding logic are proprietary.
+
+### 3. Custom MoE Offload Pipeline
+
+The runtime treats the GPU as a compute core rather than a storage unit, with model components distributed across a tri-tier memory hierarchy (VRAM / RAM / SSD) and orchestrated based on MoE routing decisions.
+
+Orchestration layer: A custom userland Python runtime (~530 lines) manages model lifecycle, memory transitions, expert placement, and inference flow control.
+
+Routing logic: Expert selection and prefetching are driven by MoE routing signals, with placement decisions optimized to minimize data movement across memory tiers during inference.
+
+Tri-tier coordination: Active computation in VRAM, recently-used components in RAM, inactive expert weights and overflow on SSD (held in Windows page file). The orchestration prevents the SSD tier from blocking inference despite its significantly lower bandwidth.
+
+Environment coupling: The runtime is tightly coupled to this specific hardware/model combination. Parameter values, loading sequence, and placement strategy are not portable through standard tooling.
+
+Implementation details: Specific orchestration logic, prefetching strategies, and configuration parameters are proprietary.
 ---
 
 ## 📊 Performance Matrix: The Transformation
