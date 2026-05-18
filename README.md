@@ -22,16 +22,45 @@ inference: false
 ## The Engineering Challenge
 
 ### 1. The Physics Barrier (Hardware)
-Standard industry logic dictates that running a **22-Billion Parameter MoE Model** requires VRAM capable of holding all experts simultaneously (40GB+) to prevent latency bottlenecks. The base weights alone typically exceed **38 GB**.
 
-**PROJECT LIA challenges this assumption by demonstrating that full MoE inference does not require resident VRAM storage of all experts simultaneously.** It runs mixed-precision BF16/NF4 inference on a single **NVIDIA GTX 1060 (6GB)**.
+According to the official model card published by OpenAI, gpt-oss-20b is designed to run within 16GB of GPU memory using MXFP4 quantization. This is the recommended minimum configuration for inference of this model.
+
+It is well-known in the local LLM community that this requirement can be circumvented through CPU/GPU hybrid offload strategies — these practices exist and are not novel. However, conventional hybrid offload typically recommends 32-64GB of fast DDR5 system RAM to compensate for the bandwidth bottleneck between CPU memory and GPU compute.
+
+PROJECT LIA runs gpt-oss-20b on a configuration significantly below both thresholds, using a tri-tier memory hierarchy with active use of all three tiers:
+
+GPU (Tier 1): NVIDIA GTX 1060 with 6GB VRAM — 2.6x less than the official 16GB minimum
+
+System RAM (Tier 2): 24GB DDR3 at 2400 MHz — below the 32-64GB DDR5 recommendation, with memory generations behind in both capacity and bandwidth
+
+SSD (Tier 3): Used as active extension of address space through Windows page file, holding 40+ GB of committed memory that supplements the limited physical RAM
+
+The pipeline orchestrates data movement across all three tiers simultaneously: active computation in VRAM, recently-used components and routing decisions in RAM, and inactive expert weights on SSD. Placement decisions are driven by routing signals from the MoE layer rather than uniform layer distribution.
+
+Operating evidence: during inference the system commits 63GB of virtual memory against 24GB physical RAM (40+ GB held in page file on SSD), while remaining stable and supporting concurrent workloads such as video streaming. This indicates the orchestration successfully prevents the SSD tier from blocking inference, despite SSD bandwidth being orders of magnitude lower than RAM or VRAM.
+Hardware platform: GTX 1060 (consumer GPU released in 2016) on a laptop chassis with DDR3 RAM. The system operates below its operational ceiling rather than at its limit.
+
+This is achieved through: per-module mixed-precision quantization (BF16/NF4) applied selectively across model components, manual placement of model elements across the three memory tiers based on access patterns and MoE routing, and adapter binding strategy that preserves LoRA functionality on the modified quantization profile.
+
+Source: https://huggingface.co/openai/gpt-oss-20b
 
 ### 2. The Tooling Gap (Software)
-At the time of development, no existing Hugging Face or BitsAndBytes tooling supported this specific GPT-based MoE configuration. Standard loaders and execution paths consistently failed at initialization.
 
-As a result, model loading, adapter binding, tokenization, routing, and orchestration were implemented manually, forming a fully custom runtime layer. **This effectively shifted the project from model fine-tuning to runtime systems engineering.**
+At the time of development, default configurations from the HuggingFace ecosystem (transformers, accelerate, peft, bitsandbytes) failed at initialization for this specific combination of model and hardware. Standard device_map="auto" distribution, default offload configurations, and out-of-the-box quantization profiles consistently produced OOM errors or unstable inference on the 6GB VRAM / 24GB DDR3 RAM target.
 
-> *Note: The term "kernel" in this documentation refers to a specialized userland execution and orchestration layer, not a replacement for the Windows NT kernel itself.*
+The standard libraries provide the foundational building blocks, but for this configuration extensive manual work was required:
+
+-Model loading: Custom device map definitions that distribute model components across VRAM, RAM, and SSD based on access patterns rather than uniform layer distribution.
+
+-Quantization: Per-module mixed-precision profile (BF16/NF4) selected based on sensitivity analysis of each component, rather than uniform quantization across the model.
+
+-Adapter binding: After non-standard quantization changes the internal layer structure, LoRA adapters cannot attach through standard PEFT target_modules logic. Manual reconstruction of attachment points was required to preserve adapter functionality on the modified base.
+
+-Expert orchestration: MoE-aware logic for selective expert loading and placement, leveraging routing signals to predict which experts will be needed and minimize SSD access during inference.
+
+-Tokenization and runtime coordination: Custom orchestration layer (~530 lines of Python) that manages model lifecycle, memory transitions, and inference flow control.
+
+The resulting runtime is tightly coupled to this specific hardware/model combination — the parameter values, loading sequence, and placement strategy are not portable through standard tooling. This represents engineering work in the gap between "the library supports this in theory" and "this actually runs stably on consumer hardware below official minimum requirements."
 
 ## The "Impossible" Architecture
 
