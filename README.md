@@ -8,7 +8,7 @@ tags:
 - sparse-activation
 - 4-bit-nf4
 - nvidia-gtx-1060
-- custom-kernel
+- custom-runtime
 pipeline_tag: text-generation
 inference: false
 ---
@@ -66,7 +66,7 @@ The resulting runtime is tightly coupled to this specific hardware/model combina
 
 LIA combines a fine-tuned base model with a custom inference runtime. The system was built in two phases: training an extensive PEFT adapter on the base model to shape behavior and response patterns, then compressing all components to fit constrained hardware through a custom orchestration pipeline.
 
-### 1. Architectural Expansion (20B → 22B)1. Base Model and Adapter Training (Phase 1)
+### 1. Base Model and Adapter Training (Phase 1)
 
 The foundation is gpt-oss-20b — a 21B parameter MoE model with 3.6B active parameters per token, released by OpenAI under Apache 2.0 license.
 
@@ -164,11 +164,8 @@ No external dependencies or network access. All model state and orchestration re
 
 ## Lineage & Acknowledgements
 
-This architecture traces its genetic lineage to the **GPT-OSS-20B** foundation.
-However, due to the surgical 20B→22B expansion, a custom NF4 quantization map,
-and a fundamental shift from conventional fine-tuning to runtime systems engineering,
-the resulting artifacts constitute a distinct evolutionary branch.
+LIA is built on the gpt-oss-20b foundation released by OpenAI under Apache 2.0 license. The system extends this base through three modifications: an extensive PEFT adapter (LoRA with bias="all", 1.17B trainable parameters), a custom per-module mixed-precision quantization profile (BF16/NF4), and a tri-tier memory orchestration runtime.
 
-**LIA** is binary-incompatible with its ancestor and exists as a standalone
-Cognitive Engine. Its operation depends on a specific "Host-as-Code" execution
-environment, without which the model artifacts are non-functional.
+The combination of these modifications produces a deployment that is not binary-compatible with standard gpt-oss-20b inference paths and cannot be reproduced through default tooling configurations.
+
+**LIA** The runtime artifacts are not interchangeable with standard gpt-oss-20b deployments. The model files alone are non-functional — operation requires the specific orchestration runtime, custom quantization configuration, and adapter binding logic developed for this deployment.
