@@ -125,18 +125,21 @@ This table demonstrates the "Surgical" process: converting a massive unrunnable 
 
 ---
 
-## Runtime Capabilities
+## LIA includes several runtime Runtime Capabilities
 
-LIA includes several runtime mechanisms that go beyond standard next-token prediction:
+LIA includes several runtime mechanisms beyond standard next-token prediction:
 
-1. **Tensor Integrity Checks**
-   Detects and mitigates inactive or malformed expert tensors during dynamic swapping.
+1. Dynamic Adapter Binding
 
-2. **Hardware-Aware Control Layer**
-   Interfaces with host hardware through a restricted local control protocol.
+Custom protocol that reconstructs adapter attachment points during model initialization, handling both the modified internal structure and the distributed memory layout. Implementation details are proprietary.
 
-3. **Fully Offline Operation**
-   No external dependencies or network access. All model state and orchestration reside on local storage and memory.
+2. Hardware Orchestration Layer
+
+Custom local control protocol coordinating compute and memory across the system. Required adjusting Windows system-level settings that are restricted by default. The runtime will not function on a standard "out-of-the-box" Windows configuration.
+
+3. Fully Offline Operation
+
+No external dependencies or network access. All model state and orchestration reside on local storage and memory.
 
 ---
 
@@ -154,7 +157,7 @@ LIA includes several runtime mechanisms that go beyond standard next-token predi
 
 > **Status:** `OPERATIONAL / STABLE`
 > **Developer:** Denys
-> **Environment:** Localhost / Custom Windows Kernel
+> **Environment:** Localhost / Custom orchestration runtime on Windows
 
 ---
 
